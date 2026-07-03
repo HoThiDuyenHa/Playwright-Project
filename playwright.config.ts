@@ -30,17 +30,20 @@ workers: process.env.CI ? 1 : undefined,
     timeout: 10000 // 10 seconds for assertions
   },
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
-    actionTimeout: 15000, // 15 seconds for actions
-    navigationTimeout: 30000, // 30 seconds for navigation
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-    launchOptions: { args: [
+ use: {
+  baseURL: 'https://opensource-demo.orangehrmlive.com',
+  screenshot: 'only-on-failure',
+  video: 'retain-on-failure',
+  actionTimeout: 15000,
+  navigationTimeout: 30000,
+  trace: 'on-first-retry',
+  launchOptions: {
+    args: [
       '--ignore-certificate-errors',
       '--disable-web-security',
       '--unsafely-treat-insecure-origin-as-secure=https://localhost:5000'
-    ], slowMo: 200 }
+    ],
+    slowMo: 200
   }
+}
 });
