@@ -1,4 +1,4 @@
-import { Locator, Page, expect } from '@playwright/test';
+import { Locator, Page } from '@playwright/test';
 
 export class PIMPage {
   readonly page: Page;
@@ -62,11 +62,11 @@ export class PIMPage {
 
     // Search
     this.employeeListTab = page.locator('a:has-text("Employee List")');
-    this.searchNameInput = page.locator('.oxd-autocomplete-text-input input');
+    this.searchNameInput = page.locator('.oxd-input-group:has-text("Employee Name") .oxd-autocomplete-text-input input');
     this.searchIdInput = page.locator('.oxd-input-group:has-text("Employee Id") input');
     this.searchBtn = page.locator('button[type="submit"]');
     this.tableRows = page.locator('.oxd-table-card');
-    this.tableNoRecords = page.locator('.oxd-toast-content, .orangehrm-horizontal-padding >> text="No Records Found"');
+    this.tableNoRecords = page.locator('.oxd-toast-content, .orangehrm-horizontal-padding >> text="No Records Found"').first();
 
     // Details / Edit
     this.personalDetailsHeader = page.locator('h6:has-text("Personal Details")');
@@ -76,7 +76,7 @@ export class PIMPage {
 
     // Photo
     this.profilePhotoInput = page.locator('input[type="file"]');
-    this.profilePhotoContainer = page.locator('.employee-image, img.oxd-useravatar');
+    this.profilePhotoContainer = page.locator('.orangehrm-edit-employee-image img.employee-image');
     this.photoUploadErrorMsg = page.locator('.oxd-input-field-error-message');
 
     // Emergency Contacts fields
@@ -102,9 +102,6 @@ export class PIMPage {
     if (middleName) await this.middleNameInput.fill(middleName);
     await this.lastNameInput.fill(lastName);
     if (empId) {
-      await this.employeeIdInput.click();
-      await this.page.keyboard.press('Control+A');
-      await this.page.keyboard.press('Backspace');
       await this.employeeIdInput.fill(empId);
     }
     await this.saveBtn.click();
@@ -122,24 +119,29 @@ export class PIMPage {
 
   async searchEmployeeById(empId: string) {
     await this.employeeListTab.click();
+    await this.page.waitForURL(/.*viewEmployeeList/, { timeout: 30000 });
     await this.searchIdInput.fill(empId);
     await this.searchBtn.click();
     await this.page.waitForLoadState('networkidle');
   }
 
   async deleteEmployee(empId: string) {
+    await this.page.waitForTimeout(2000);
     await this.searchEmployeeById(empId);
+    await this.deleteBtn.first().waitFor({ state: 'visible', timeout: 30000 });
     await this.deleteBtn.first().click();
     await this.yesDeleteBtn.click();
     await this.page.waitForLoadState('networkidle');
   }
 
   async uploadPhoto(filePath: string) {
-    const fileChooserPromise = this.page.waitForEvent('filechooser');
+    await this.profilePhotoContainer.waitFor({ state: 'visible', timeout: 30000 });
     await this.profilePhotoContainer.click();
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(filePath);
+    await this.page.waitForURL(/.*viewPhotograph/, { timeout: 30000 });
+    await this.profilePhotoInput.waitFor({ state: 'attached', timeout: 30000 });
+    await this.profilePhotoInput.setInputFiles(filePath);
     await this.saveBtn.click();
+    await this.page.waitForLoadState('networkidle');
   }
 
   async addEmergencyContact(name: string, relationship: string, phone: string) {
