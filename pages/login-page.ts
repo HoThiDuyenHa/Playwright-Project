@@ -13,6 +13,7 @@ export class LoginPage {
   readonly forgotPasswordLink: Locator;
   readonly resetPasswordButton: Locator;
   readonly cancelButton: Locator;
+  readonly successResetMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -24,15 +25,18 @@ export class LoginPage {
     this.userDropdown = page.locator(".oxd-userdropdown");
     this.logoutLink = page.locator("text=Logout");
     this.forgotPasswordLink = page.locator("p.orangehrm-login-forgot-header");
-    this.resetPasswordButton = page.locator( 'button[type="submit"].orangehrm-forgot-password-button--reset');
+    this.resetPasswordButton = page.locator('button[type="submit"].orangehrm-forgot-password-button--reset');
     this.cancelButton = page.locator('button[type="button"].orangehrm-forgot-password-button--cancel');
+    this.successResetMessage = page.getByText('Reset Password link sent successfully');
   }
 
   async navigate() {
     await this.page.goto('/web/index.php/auth/login');
+    await this.page.waitForLoadState('networkidle');
   }
 
   async login(user: string, pass: string) {
+    await this.usernameInput.waitFor({ state: 'visible', timeout: 15000 });
     await this.usernameInput.fill(user);
     await this.passwordInput.fill(pass);
     await this.loginButton.click();
@@ -41,5 +45,7 @@ export class LoginPage {
   async logout() {
     await this.userDropdown.click();
     await this.logoutLink.click();
+    await this.page.waitForURL(/.*login/, { timeout: 30000 });
+    await this.page.waitForLoadState('networkidle');
   }
 }

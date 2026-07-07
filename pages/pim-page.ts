@@ -2,11 +2,7 @@ import { Locator, Page } from '@playwright/test';
 
 export class PIMPage {
   readonly page: Page;
-
-  // Sidebar / Header
   readonly pimMenuItem: Locator;
-
-  // Add Employee Page
   readonly addEmployeeBtn: Locator;
   readonly firstNameInput: Locator;
   readonly middleNameInput: Locator;
@@ -14,44 +10,36 @@ export class PIMPage {
   readonly employeeIdInput: Locator;
   readonly saveBtn: Locator;
   readonly requiredValidationError: Locator;
-
-  // Search / List Employee
   readonly employeeListTab: Locator;
   readonly searchNameInput: Locator;
   readonly searchIdInput: Locator;
   readonly searchBtn: Locator;
   readonly tableRows: Locator;
   readonly tableNoRecords: Locator;
-
-  // Details Page
   readonly personalDetailsHeader: Locator;
   readonly jobDetailsTab: Locator;
   readonly jobTitleDropdown: Locator;
   readonly emergencyContactsTab: Locator;
-
-  // Photo Upload
   readonly profilePhotoInput: Locator;
   readonly profilePhotoContainer: Locator;
   readonly photoUploadErrorMsg: Locator;
-
-  // Emergency Contacts
   readonly addContactBtn: Locator;
   readonly contactNameInput: Locator;
   readonly contactRelationshipInput: Locator;
   readonly contactHomePhoneInput: Locator;
-
-  // Edit / Delete Actions
   readonly editBtn: Locator;
   readonly deleteBtn: Locator;
   readonly yesDeleteBtn: Locator;
+  readonly createLoginDetailsCheckbox: Locator;
+  readonly createLoginDetailsSwitch: Locator;
+  readonly loginUsernameInput: Locator;
+  readonly loginPasswordInput: Locator;
+  readonly loginConfirmPasswordInput: Locator;
+  readonly toastMessage: Locator;
 
   constructor(page: Page) {
     this.page = page;
-
-    // Sidebar
     this.pimMenuItem = page.locator('a:has-text("PIM")');
-
-    // Add Employee
     this.addEmployeeBtn = page.locator('button:has-text("Add")');
     this.firstNameInput = page.locator('input[name="firstName"]');
     this.middleNameInput = page.locator('input[name="middleName"]');
@@ -59,36 +47,32 @@ export class PIMPage {
     this.employeeIdInput = page.locator('.oxd-input-group:has-text("Employee Id") input');
     this.saveBtn = page.locator('button[type="submit"]');
     this.requiredValidationError = page.locator('.oxd-input-field-error-message');
-
-    // Search
     this.employeeListTab = page.locator('a:has-text("Employee List")');
     this.searchNameInput = page.locator('.oxd-input-group:has-text("Employee Name") .oxd-autocomplete-text-input input');
     this.searchIdInput = page.locator('.oxd-input-group:has-text("Employee Id") input');
     this.searchBtn = page.locator('button[type="submit"]');
     this.tableRows = page.locator('.oxd-table-card');
     this.tableNoRecords = page.locator('.oxd-toast-content, .orangehrm-horizontal-padding >> text="No Records Found"').first();
-
-    // Details / Edit
     this.personalDetailsHeader = page.locator('h6:has-text("Personal Details")');
     this.jobDetailsTab = page.locator('a:has-text("Job")');
     this.jobTitleDropdown = page.locator('.oxd-input-group:has-text("Job Title") .oxd-select-text');
     this.emergencyContactsTab = page.locator('a:has-text("Emergency Contacts")');
-
-    // Photo
     this.profilePhotoInput = page.locator('input[type="file"]');
     this.profilePhotoContainer = page.locator('.orangehrm-edit-employee-image img.employee-image');
     this.photoUploadErrorMsg = page.locator('.oxd-input-field-error-message');
-
-    // Emergency Contacts fields
     this.addContactBtn = page.locator('button:has-text("Add")').first();
     this.contactNameInput = page.locator('.oxd-input-group:has-text("Name") input');
     this.contactRelationshipInput = page.locator('.oxd-input-group:has-text("Relationship") input');
     this.contactHomePhoneInput = page.locator('.oxd-input-group:has-text("Home Telephone") input');
-
-    // Edit/Delete buttons in the list table
     this.editBtn = page.locator('.oxd-table-cell-actions button .bi-pencil-fill');
     this.deleteBtn = page.locator('.oxd-table-cell-actions button .bi-trash');
     this.yesDeleteBtn = page.locator('button:has-text("Yes, Delete")');
+    this.createLoginDetailsCheckbox = page.locator('.oxd-switch-wrapper input[type="checkbox"]');
+    this.createLoginDetailsSwitch = page.locator('.oxd-switch-input');
+    this.loginUsernameInput = page.locator('.oxd-input-group:has-text("Username") input');
+    this.loginPasswordInput = page.locator('input[type="password"]').first();
+    this.loginConfirmPasswordInput = page.locator('input[type="password"]').nth(1);
+    this.toastMessage = page.locator('.oxd-toast-content');
   }
 
   async navigateToPIM() {
@@ -111,7 +95,6 @@ export class PIMPage {
   async searchEmployeeByName(name: string) {
     await this.employeeListTab.click();
     await this.searchNameInput.fill(name);
-    // Wait for dropdown auto-suggest if any
     await this.page.waitForTimeout(1000);
     await this.searchBtn.click();
     await this.page.waitForLoadState('networkidle');
@@ -151,5 +134,30 @@ export class PIMPage {
     await this.contactRelationshipInput.fill(relationship);
     await this.contactHomePhoneInput.fill(phone);
     await this.saveBtn.click();
+  }
+
+  async addEmployeeWithLogin(firstName: string, lastName: string, username: string, password: string, empId = '') {
+    await this.addEmployeeBtn.click();
+    await this.firstNameInput.fill(firstName);
+    await this.lastNameInput.fill(lastName);
+    if (empId) {
+      await this.employeeIdInput.focus();
+      await this.page.keyboard.press('Control+A');
+      await this.page.keyboard.press('Backspace');
+      await this.employeeIdInput.fill(empId);
+    }
+    await this.createLoginDetailsSwitch.click();
+
+    const usernameInput = this.page.locator('.oxd-input-group:has(label:has-text("Username")) input');
+    await usernameInput.waitFor({ state: 'visible', timeout: 10000 });
+    await usernameInput.fill(username);
+    await this.loginPasswordInput.fill(password);
+    await this.loginConfirmPasswordInput.fill(password);
+    await this.saveBtn.click();
+  }
+
+  async selectJobTitleByIndex(index: number) {
+    await this.jobTitleDropdown.click();
+    await this.page.locator('.oxd-select-dropdown .oxd-select-option').nth(index).click();
   }
 }

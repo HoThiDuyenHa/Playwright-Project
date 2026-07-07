@@ -163,7 +163,7 @@ test.describe('Authentication Module', () => {
     await test.step('Step 5: Verify password reset request is successful', async () => {
       await page.waitForURL(/.*sendPasswordReset/, { timeout: 60000 });
       await expect(page).toHaveURL(/.*sendPasswordReset/);
-      await expect(page.getByText('Reset Password link sent successfully')).toBeVisible();
+      await expect(loginPage.successResetMessage).toBeVisible();
     });
   });
 
@@ -192,7 +192,7 @@ test.describe('Authentication Module', () => {
     await test.step('Step 5: Verify reset request is processed successfully (prevent user enumeration)', async () => {
       await page.waitForURL(/.*sendPasswordReset/, { timeout: 30000 });
       await expect(page).toHaveURL(/.*sendPasswordReset/);
-      await expect(page.getByText('Reset Password link sent successfully')).toBeVisible();
+      await expect(loginPage.successResetMessage).toBeVisible();
     });
   });
 });
