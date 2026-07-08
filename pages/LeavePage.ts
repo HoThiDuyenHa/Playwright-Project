@@ -159,11 +159,11 @@ export class LeavePage {
     await this.page.waitForLoadState('networkidle');
     await this.formLoader.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
     await this.entitlementEmpInput.fill(empName);
-    await this.page.waitForTimeout(3000);
-    await this.autocompleteOptions.first().click();
+    await this.autocompleteOptions.filter({ hasText: empName }).first().waitFor({ state: 'visible', timeout: 8000 });
+    await this.autocompleteOptions.filter({ hasText: empName }).first().click();
 
     await this.entitlementLeaveTypeDropdown.click();
-    await this.page.waitForTimeout(1000);
+    await this.selectOptions.filter({ hasText: leaveType }).first().waitFor({ state: 'visible', timeout: 5000 });
     await this.selectOptions.filter({ hasText: leaveType }).first().click();
 
     await this.entitlementInput.fill(amount);
@@ -179,10 +179,8 @@ export class LeavePage {
 
   async filterByEmployee(empName: string) {
     await this.searchEmpInput.fill(empName);
-    await this.page.waitForTimeout(2000);
-    if (await this.autocompleteOptions.count() > 0) {
-      await this.autocompleteOptions.first().click();
-    }
+    await this.autocompleteOptions.filter({ hasText: empName }).first().waitFor({ state: 'visible', timeout: 8000 });
+    await this.autocompleteOptions.filter({ hasText: empName }).first().click();
   }
 
   // Verification Methods (POM assertions)

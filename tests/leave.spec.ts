@@ -2,7 +2,7 @@ import { test, Page } from '@playwright/test';
 import { LeavePage } from '../pages/LeavePage';
 import { LoginPage } from '../pages/LoginPage';
 import { PIMPage } from '../pages/PIMPage';
-import { getFutureDate } from '../utils/DateUtils';
+import { getFutureWeekday } from '../utils/DateUtils';
 
 async function createEmployeeWithEntitlement(page: Page): Promise<{ username: string; password: string; empFirstName: string; empFullName: string }> {
   const loginPage = new LoginPage(page);
@@ -54,8 +54,8 @@ test.describe('Leave Module Testing', () => {
     });
 
     test('TC-LV-01: Apply for leave with valid date range', async () => {
-        const start = getFutureDate(2);
-        const end = getFutureDate(3);
+        const start = getFutureWeekday(1);
+        const end = getFutureWeekday(2);
 
         await test.step('Step 1: Login as employee', async () => {
             await loginPage.login(testUser.username, testUser.password);
@@ -73,7 +73,7 @@ test.describe('Leave Module Testing', () => {
         });
 
         await test.step('Step 4: Verify apply leave success', async () => {
-            await leave.verifyToastMessageVisible();
+            await leave.verifyToastMessageContains(/Successfully/i);
         });
 
         await test.step('Step 5: Verify status is Pending Approval in My Leave List', async () => {
@@ -83,8 +83,8 @@ test.describe('Leave Module Testing', () => {
     });
 
     test('TC-LV-02: Apply for leave with end date before start date', async () => {
-        const start = getFutureDate(3);
-        const end = getFutureDate(2);
+        const start = getFutureWeekday(2);
+        const end = getFutureWeekday(1);
 
         await test.step('Step 1: Login as employee', async () => {
             await loginPage.login(testUser.username, testUser.password);
@@ -95,9 +95,10 @@ test.describe('Leave Module Testing', () => {
             await leave.navigateToLeave();
         });
 
-        await test.step('Step 3: Input end date before start date', async () => {
+        await test.step('Step 3: Input end date before start date and submit', async () => {
             await leave.selectLeaveType('US - Personal');
             await leave.fillLeaveForm(start, end);
+            await leave.submitRequest();
         });
 
         await test.step('Step 4: Verify error message displayed', async () => {
@@ -106,6 +107,15 @@ test.describe('Leave Module Testing', () => {
     });
 
     test('TC-LV-04: Admin approves a pending leave request', async () => {
+        await loginPage.login(testUser.username, testUser.password);
+        await loginPage.verifyDashboardPageDisplayed();
+        await leave.navigateToLeave();
+        await leave.selectLeaveType('US - Personal');
+        await leave.fillLeaveForm(getFutureWeekday(5), getFutureWeekday(6));
+        await leave.submitRequest();
+        await leave.verifyToastMessageContains(/Successfully/i);
+        await loginPage.logout();
+
         await test.step('Step 1: Login as Admin', async () => {
             await loginPage.login('Admin', 'admin123');
             await loginPage.verifyDashboardPageDisplayed();
@@ -136,9 +146,9 @@ test.describe('Leave Module Testing', () => {
         await loginPage.verifyDashboardPageDisplayed();
         await leave.navigateToLeave();
         await leave.selectLeaveType('US - Personal');
-        await leave.fillLeaveForm(getFutureDate(5), getFutureDate(6));
+        await leave.fillLeaveForm(getFutureWeekday(3), getFutureWeekday(4));
         await leave.submitRequest();
-        await leave.verifyToastMessageVisible();
+        await leave.verifyToastMessageContains(/Successfully/i);
         await loginPage.logout();
 
         await test.step('Step 1: Login as Admin', async () => {
