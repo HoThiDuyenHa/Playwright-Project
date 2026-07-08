@@ -1,6 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { AttendancePage } from '../pages/AttendancePage';
-import { LoginPage } from '../pages/login-page';
+import { LoginPage } from '../pages/LoginPage';
 
 test.describe('Attendance Module', () => {
   let loginPage: LoginPage;
@@ -12,7 +12,7 @@ test.describe('Attendance Module', () => {
 
     await loginPage.navigate();
     await loginPage.login('Admin', 'admin123');
-    await expect(page).toHaveURL(/.*dashboard/);
+    await loginPage.verifyDashboardPageDisplayed();
   });
 
   test('TC-ATT-01 Punch in without prior punch out @smoke', async () => {
@@ -29,17 +29,17 @@ test.describe('Attendance Module', () => {
     });
 
     await test.step('Step 3: Verify success message is displayed', async () => {
-      await expect(attendance.toastMessage).toBeVisible();
-      await expect(attendance.toastMessage).toContainText(/Successfully/i);
+      await attendance.verifyToastMessageVisible();
+      await attendance.verifyToastMessageContains(/Successfully/i);
     });
 
     await test.step('Step 4: Verify title is Punch Out and Out button is visible', async () => {
-      await expect(attendance.pageTitle).toHaveText('Punch Out');
-      await expect(attendance.outButton).toBeVisible();
+      await attendance.verifyPageTitle('Punch Out');
+      await attendance.verifyOutButtonVisible();
     });
   });
 
-  test('TC-ATT-02 Punch out after punching in @smoke', async ({ page }) => {
+  test('TC-ATT-02 Punch out after punching in @smoke', async () => {
     await test.step('Setup: Ensure punched in state', async () => {
       await attendance.ensurePunchedIn();
     });
@@ -53,24 +53,18 @@ test.describe('Attendance Module', () => {
     });
 
     await test.step('Step 3: Verify success message is displayed', async () => {
-      await expect(attendance.toastMessage).toBeVisible();
-      await expect(attendance.toastMessage).toContainText(/Successfully/i);
+      await attendance.verifyToastMessageVisible();
+      await attendance.verifyToastMessageContains(/Successfully/i);
     });
 
     await test.step('Step 4: Verify title returns to Punch In and In button is visible', async () => {
-      await expect(attendance.pageTitle).toHaveText('Punch In');
-      await expect(attendance.inButton).toBeVisible();
+      await attendance.verifyPageTitle('Punch In');
+      await attendance.verifyInButtonVisible();
     });
 
     await test.step('Step 5: Verify attendance record displays calculated duration', async () => {
-      await page.goto('https://opensource-demo.orangehrmlive.com/web/index.php/attendance/viewMyAttendanceRecord');
-      await page.waitForLoadState('networkidle');
-      
-      const lastRow = page.locator('.oxd-table-card').last();
-      await lastRow.waitFor({ state: 'visible' });
-      const durationCell = lastRow.locator('.oxd-table-cell').nth(3);
-      
-      await expect(durationCell).not.toBeEmpty();
+      await attendance.navigateToMyAttendanceRecord();
+      await attendance.verifyCalculatedDurationNotEmpty();
     });
   });
 
@@ -84,9 +78,9 @@ test.describe('Attendance Module', () => {
     });
 
     await test.step('Step 2: Verify duplicate punch in is blocked (Punch Out interface shown)', async () => {
-      await expect(attendance.pageTitle).toHaveText('Punch Out');
-      await expect(attendance.outButton).toBeVisible();
-      await expect(attendance.inButton).not.toBeVisible();
+      await attendance.verifyPageTitle('Punch Out');
+      await attendance.verifyOutButtonVisible();
+      await attendance.verifyInButtonNotVisible();
     });
   });
 });

@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 export class LeavePage {
   readonly page: Page;
@@ -24,6 +24,19 @@ export class LeavePage {
   readonly entitlementInput: Locator;
   readonly entitlementSubmitButton: Locator;
   readonly entitlementConfirmButton: Locator;
+  
+  // Custom helpers to avoid inline selectors in methods
+  readonly formLoader: Locator;
+  readonly optionLocator: Locator;
+  readonly approveButtonInRow: Locator;
+  readonly rejectButtonInRow: Locator;
+  readonly pendingApprovalText: Locator;
+
+  // Tabs for navigation
+  readonly entitlementsTab: Locator;
+  readonly addEntitlementsOption: Locator;
+  readonly myLeaveTab: Locator;
+  readonly leaveListTab: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -51,6 +64,17 @@ export class LeavePage {
     this.entitlementInput = page.locator('.oxd-input-group:has-text("Entitlement") input');
     this.entitlementSubmitButton = page.locator('button[type="submit"]');
     this.entitlementConfirmButton = page.locator('button:has-text("Confirm"), button:has-text("Ok")');
+
+    this.formLoader = page.locator('.oxd-form-loader');
+    this.optionLocator = page.getByRole('option');
+    this.approveButtonInRow = page.getByRole('button', { name: 'Approve' });
+    this.rejectButtonInRow = page.getByRole('button', { name: 'Reject' });
+    this.pendingApprovalText = page.getByText('Pending Approval');
+
+    this.entitlementsTab = page.locator('.oxd-topbar-body-nav-tab', { hasText: 'Entitlements' });
+    this.addEntitlementsOption = page.locator('.oxd-dropdown-menu >> text="Add Entitlements"');
+    this.myLeaveTab = page.locator('.oxd-topbar-body-nav-tab', { hasText: 'My Leave' });
+    this.leaveListTab = page.locator('.oxd-topbar-body-nav-tab', { hasText: 'Leave List' });
   }
 
   async navigateToLeave() {
@@ -59,12 +83,25 @@ export class LeavePage {
     await this.applyTab.waitFor({ state: 'visible' });
     await this.applyTab.click();
     await this.page.waitForLoadState('networkidle');
-    await this.page.locator('.oxd-form-loader').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+    await this.formLoader.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+  }
+
+  async navigateToAddEntitlements() {
+    await this.entitlementsTab.click();
+    await this.addEntitlementsOption.click();
+  }
+
+  async navigateToMyLeave() {
+    await this.myLeaveTab.click();
+  }
+
+  async navigateToLeaveList() {
+    await this.leaveListTab.click();
   }
 
   async selectLeaveType(type: string) {
     await this.page.waitForLoadState('networkidle');
-    await this.page.locator('.oxd-form-loader').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+    await this.formLoader.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
     await this.leaveTypeDropdown.waitFor({ state: 'visible' });
     await this.leaveTypeDropdown.click();
     await this.selectOptions.filter({ hasText: type }).first().click();
@@ -90,29 +127,27 @@ export class LeavePage {
 
   async filterLeaveStatus(status: string) {
     await this.page.waitForLoadState('networkidle');
-    await this.page.locator('.oxd-form-loader').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+    await this.formLoader.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
     await this.statusDropdown.click();
-    await this.page.getByRole('option', { name: status, exact: true }).click();
+    await this.optionLocator.filter({ hasText: status }).first().click();
     await this.searchButton.click();
   }
 
   async approveFirstRequest() {
     await this.tableRows.first().waitFor({ state: 'visible' });
-    const approveBtn = this.tableRows.first().getByRole('button', { name: 'Approve' });
-    await approveBtn.click();
+    await this.tableRows.first().locator(this.approveButtonInRow).click();
   }
 
   async rejectFirstRequest() {
     await this.tableRows.first().waitFor({ state: 'visible' });
-    const rejectBtn = this.tableRows.first().getByRole('button', { name: 'Reject' });
-    await rejectBtn.click();
+    await this.tableRows.first().locator(this.rejectButtonInRow).click();
   }
 
   async selectLeaveStatus(status: string) {
     await this.page.waitForLoadState('networkidle');
-    await this.page.locator('.oxd-form-loader').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+    await this.formLoader.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
     await this.statusDropdown.click();
-    await this.page.getByRole('option', { name: status, exact: true }).click();
+    await this.optionLocator.filter({ hasText: status }).first().click();
   }
 
   async searchLeave() {
@@ -122,7 +157,7 @@ export class LeavePage {
 
   async addEntitlement(empName: string, leaveType: string, amount: string) {
     await this.page.waitForLoadState('networkidle');
-    await this.page.locator('.oxd-form-loader').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
+    await this.formLoader.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
     await this.entitlementEmpInput.fill(empName);
     await this.page.waitForTimeout(3000);
     await this.autocompleteOptions.first().click();
@@ -148,5 +183,22 @@ export class LeavePage {
     if (await this.autocompleteOptions.count() > 0) {
       await this.autocompleteOptions.first().click();
     }
+  }
+
+  // Verification Methods (POM assertions)
+  async verifyToastMessageVisible() {
+    await expect(this.toastMessage).toBeVisible();
+  }
+
+  async verifyToastMessageContains(text: string | RegExp) {
+    await expect(this.toastMessage).toContainText(text);
+  }
+
+  async verifyPendingApprovalVisible() {
+    await expect(this.pendingApprovalText.first()).toBeVisible();
+  }
+
+  async verifyErrorMessageVisible() {
+    await expect(this.errorMessage).toBeVisible();
   }
 }

@@ -1,7 +1,8 @@
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../pages/login-page';
-import { PIMPage } from '../pages/pim-page';
+import { test } from '@playwright/test';
+import { LoginPage } from '../pages/LoginPage';
+import { PIMPage } from '../pages/PIMPage';
 import * as path from 'path';
+import * as fs from 'fs';
 
 test.describe('PIM Module', () => {
   let loginPage: LoginPage;
@@ -13,7 +14,7 @@ test.describe('PIM Module', () => {
 
     await loginPage.navigate();
     await loginPage.login('Admin', 'admin123');
-    await expect(page).toHaveURL(/.*dashboard/);
+    await loginPage.verifyDashboardPageDisplayed();
     await pimPage.navigateToPIM();
   });
 
@@ -25,13 +26,12 @@ test.describe('PIM Module', () => {
     });
 
     await test.step('Step 2: Verify employee details page loads', async () => {
-      await expect(pimPage.personalDetailsHeader).toBeVisible();
+      await pimPage.verifyPersonalDetailsHeaderVisible();
     });
 
     await test.step('Step 3: Verify employee appears in the employee list', async () => {
       await pimPage.searchEmployeeById(empId);
-      await expect(pimPage.tableRows.first()).toContainText('John');
-      await expect(pimPage.tableRows.first()).toContainText('Doe');
+      await pimPage.verifyEmployeeInList('John', 'Doe');
     });
   });
 
@@ -43,8 +43,7 @@ test.describe('PIM Module', () => {
     });
 
     await test.step('Step 2: Verify required validation prevents saving', async () => {
-      await expect(pimPage.requiredValidationError).toBeVisible();
-      await expect(pimPage.requiredValidationError).toHaveText('Required');
+      await pimPage.verifyRequiredValidationErrorVisible();
     });
   });
 
@@ -54,7 +53,7 @@ test.describe('PIM Module', () => {
     });
 
     await test.step('Step 2: Verify matching employee is shown', async () => {
-      await expect(pimPage.tableRows.first()).toContainText('John');
+      await pimPage.verifyFirstRowContainsText('John');
     });
   });
 
@@ -64,11 +63,7 @@ test.describe('PIM Module', () => {
     });
   
     await test.step('Step 2: Verify all matching results contain Jo', async () => {
-      const count = await pimPage.tableRows.count();
-      if (count > 0) {
-        const text = await pimPage.tableRows.first().innerText();
-        expect(text.toLowerCase()).toContain('j');
-      }
+      await pimPage.verifyFirstRowContainsCharCaseInsensitive('j');
     });
   });
   
@@ -78,7 +73,7 @@ test.describe('PIM Module', () => {
     });
   
     await test.step('Step 2: Verify No Records Found message', async () => {
-      await expect(pimPage.tableNoRecords).toBeVisible();
+      await pimPage.verifyNoRecordsFoundVisible();
     });
   });
   
@@ -96,7 +91,7 @@ test.describe('PIM Module', () => {
     });
   
     await test.step('Step 3: Verify success message or data updated', async () => {
-      await expect(pimPage.toastMessage.first()).toBeVisible();
+      await pimPage.verifyToastMessageVisible();
     });
   });
   
@@ -113,7 +108,7 @@ test.describe('PIM Module', () => {
   
     await test.step('Step 3: Verify employee is removed from the list', async () => {
       await pimPage.searchEmployeeById(testEmpId);
-      await expect(pimPage.tableNoRecords).toBeVisible();
+      await pimPage.verifyNoRecordsFoundVisible();
     });
   });
   
@@ -126,7 +121,6 @@ test.describe('PIM Module', () => {
   
     await test.step('Step 2: Upload valid profile photo', async () => {
       const tempPhotoPath = path.join(__dirname, 'temp_avatar.jpg');
-      const fs = require('fs');
       if (!fs.existsSync(tempPhotoPath)) {
         fs.writeFileSync(tempPhotoPath, 'mock image content');
       }
@@ -135,7 +129,7 @@ test.describe('PIM Module', () => {
     });
   
     await test.step('Step 3: Verify photo is saved successfully', async () => {
-      await expect(pimPage.toastMessage.first()).toBeVisible();
+      await pimPage.verifyToastMessageVisible();
     });
   });
   
@@ -148,7 +142,6 @@ test.describe('PIM Module', () => {
   
     await test.step('Step 2: Upload invalid file type (.txt)', async () => {
       const tempFilePath = path.join(__dirname, 'temp_file.txt');
-      const fs = require('fs');
       if (!fs.existsSync(tempFilePath)) {
         fs.writeFileSync(tempFilePath, 'some text content');
       }
@@ -157,8 +150,7 @@ test.describe('PIM Module', () => {
     });
   
     await test.step('Step 3: Verify validation error is displayed', async () => {
-      await expect(pimPage.photoUploadErrorMsg).toBeVisible();
-      await expect(pimPage.photoUploadErrorMsg).toHaveText(/File type not allowed|File type not supported/i);
+      await pimPage.verifyPhotoUploadErrorMsg(/File type not allowed|File type not supported/i);
     });
   });
   
@@ -174,7 +166,7 @@ test.describe('PIM Module', () => {
     });
   
     await test.step('Step 3: Verify contact is saved', async () => {
-      await expect(pimPage.toastMessage.first()).toBeVisible();
+      await pimPage.verifyToastMessageVisible();
     });
   });
 });

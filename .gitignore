@@ -6,3 +6,11 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Allure Reports
+/allure-results/
+/allure-report/
+
+# Test Temp Files
+**/temp_avatar.jpg
+**/temp_file.txt

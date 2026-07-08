@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 
 export class PIMPage {
   readonly page: Page;
@@ -36,6 +36,8 @@ export class PIMPage {
   readonly loginPasswordInput: Locator;
   readonly loginConfirmPasswordInput: Locator;
   readonly toastMessage: Locator;
+  readonly loginDetailsUsernameInput: Locator;
+  readonly selectDropdownOption: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -73,6 +75,8 @@ export class PIMPage {
     this.loginPasswordInput = page.locator('input[type="password"]').first();
     this.loginConfirmPasswordInput = page.locator('input[type="password"]').nth(1);
     this.toastMessage = page.locator('.oxd-toast-content');
+    this.loginDetailsUsernameInput = page.locator('.oxd-input-group:has(label:has-text("Username")) input');
+    this.selectDropdownOption = page.locator('.oxd-select-dropdown .oxd-select-option');
   }
 
   async navigateToPIM() {
@@ -148,9 +152,8 @@ export class PIMPage {
     }
     await this.createLoginDetailsSwitch.click();
 
-    const usernameInput = this.page.locator('.oxd-input-group:has(label:has-text("Username")) input');
-    await usernameInput.waitFor({ state: 'visible', timeout: 10000 });
-    await usernameInput.fill(username);
+    await this.loginDetailsUsernameInput.waitFor({ state: 'visible', timeout: 10000 });
+    await this.loginDetailsUsernameInput.fill(username);
     await this.loginPasswordInput.fill(password);
     await this.loginConfirmPasswordInput.fill(password);
     await this.saveBtn.click();
@@ -158,6 +161,46 @@ export class PIMPage {
 
   async selectJobTitleByIndex(index: number) {
     await this.jobTitleDropdown.click();
-    await this.page.locator('.oxd-select-dropdown .oxd-select-option').nth(index).click();
+    await this.selectDropdownOption.nth(index).click();
+  }
+
+  // Verification Methods (POM assertions)
+  async verifyPersonalDetailsHeaderVisible() {
+    await expect(this.personalDetailsHeader).toBeVisible();
+  }
+
+  async verifyEmployeeInList(firstName: string, lastName: string) {
+    await expect(this.tableRows.first()).toContainText(firstName);
+    await expect(this.tableRows.first()).toContainText(lastName);
+  }
+
+  async verifyRequiredValidationErrorVisible() {
+    await expect(this.requiredValidationError).toBeVisible();
+    await expect(this.requiredValidationError).toHaveText('Required');
+  }
+
+  async verifyFirstRowContainsText(text: string) {
+    await expect(this.tableRows.first()).toContainText(text);
+  }
+
+  async verifyFirstRowContainsCharCaseInsensitive(char: string) {
+    const count = await this.tableRows.count();
+    if (count > 0) {
+      const text = await this.tableRows.first().innerText();
+      expect(text.toLowerCase()).toContain(char.toLowerCase());
+    }
+  }
+
+  async verifyNoRecordsFoundVisible() {
+    await expect(this.tableNoRecords).toBeVisible();
+  }
+
+  async verifyToastMessageVisible() {
+    await expect(this.toastMessage.first()).toBeVisible();
+  }
+
+  async verifyPhotoUploadErrorMsg(pattern: RegExp) {
+    await expect(this.photoUploadErrorMsg).toBeVisible();
+    await expect(this.photoUploadErrorMsg).toHaveText(pattern);
   }
 }
