@@ -24,7 +24,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['html'], ['allure-playwright', { outputFolder: 'allure-results' }]],
+  reporter: [['html'], ['allure-playwright', { resultsDir: 'allure-results' }]],
   timeout: 1000 * 1800, // 30 minutes for test execution (all tests in a test execution session)
   expect: {
     timeout: 15000 // 15 seconds for assertions
