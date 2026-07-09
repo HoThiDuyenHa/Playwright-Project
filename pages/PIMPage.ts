@@ -164,7 +164,6 @@ export class PIMPage {
     await this.selectDropdownOption.nth(index).click();
   }
 
-  // Verification Methods (POM assertions)
   async verifyPersonalDetailsHeaderVisible() {
     await expect(this.personalDetailsHeader).toBeVisible();
   }

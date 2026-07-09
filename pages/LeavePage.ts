@@ -25,14 +25,12 @@ export class LeavePage {
   readonly entitlementSubmitButton: Locator;
   readonly entitlementConfirmButton: Locator;
   
-  // Custom helpers to avoid inline selectors in methods
   readonly formLoader: Locator;
   readonly optionLocator: Locator;
   readonly approveButtonInRow: Locator;
   readonly rejectButtonInRow: Locator;
   readonly pendingApprovalText: Locator;
 
-  // Tabs for navigation
   readonly entitlementsTab: Locator;
   readonly addEntitlementsOption: Locator;
   readonly myLeaveTab: Locator;
@@ -183,7 +181,6 @@ export class LeavePage {
     await this.autocompleteOptions.filter({ hasText: empName }).first().click();
   }
 
-  // Verification Methods (POM assertions)
   async verifyToastMessageVisible() {
     await expect(this.toastMessage).toBeVisible();
   }

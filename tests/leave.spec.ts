@@ -16,17 +16,14 @@ async function createEmployeeWithEntitlement(page: Page): Promise<{ username: st
   const username = `user${Date.now().toString().slice(-4)}`;
   const password = `Password123!`;
 
-  // Create Employee with Login Details
   await pimPage.navigateToPIM();
   await pimPage.addEmployeeWithLogin(empFirstName, empLastName, username, password, empId);
   await pimPage.verifyPersonalDetailsHeaderVisible();
 
-  // Add Entitlement for Employee
   await leavePage.navigateToLeave();
   await leavePage.navigateToAddEntitlements();
   await leavePage.addEntitlement(empFullName, 'US - Personal', '10.00');
 
-  // Logout
   await loginPage.logout();
 
   return { username, password, empFirstName, empFullName };
